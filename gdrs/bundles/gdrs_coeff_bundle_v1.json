@@ -1,0 +1,158 @@
+{
+  "version": "1.0.0",
+  "model_id": "gdrs_diabetes_2018_clinical_epic_potsdam",
+  "meta": {
+    "display_name": "2018 Clinical GDRS (EPIC-Potsdam derivation)",
+    "source": "EPIC-Potsdam",
+    "population_note": "Adults without diabetes at baseline",
+    "units_convention": "SI",
+    "notes": [
+      "Model computes original GDRS points, then clinical extension using HbA1c.",
+      "External calibration may be required outside the source population."
+    ]
+  },
+
+  "original_points_model": {
+    "variables": [
+      {
+        "name": "age",
+        "kind": "continuous",
+        "units": "years",
+        "points_per_unit": 5.1
+      },
+      {
+        "name": "height",
+        "kind": "continuous",
+        "units": "cm",
+        "points_per_unit": -2.7
+      },
+      {
+        "name": "waist",
+        "kind": "continuous",
+        "units": "cm",
+        "points_per_unit": 7.6
+      },
+      {
+        "name": "hypertension",
+        "kind": "binary",
+        "points_if_true": 47
+      },
+      {
+        "name": "exercise",
+        "kind": "continuous",
+        "units": "hours_per_week",
+        "points_per_unit": -2.0
+      },
+      {
+        "name": "smoking",
+        "kind": "categorical",
+        "allow_unknown": false,
+        "categories": [
+          { "code": "never",  "label": "Never smoker",  "points": 0 },
+          { "code": "former_lt20",  "label": "Former <20 units/day",  "points": 15 },
+          { "code": "former_ge20",  "label": "Former ≥20 units/day", "points": 45 },
+          { "code": "current_lt20", "label": "Current <20 units/day", "points": 23 },
+          { "code": "current_ge20", "label": "Current ≥20 units/day", "points": 77 }
+        ]
+      },
+      {
+        "name": "wholegrains",
+        "kind": "continuous",
+        "units": "g_per_day",
+        "points_per_unit": -7,
+        "scaling": { "per": 50 }
+      },
+      {
+        "name": "coffee",
+        "kind": "continuous",
+        "units": "g_per_day",
+        "points_per_unit": -5,
+        "scaling": { "per": 150 }
+      },
+      {
+        "name": "redmeat",
+        "kind": "continuous",
+        "units": "g_per_day",
+        "points_per_unit": 55,
+        "scaling": { "per": 150 }
+      },
+      {
+        "name": "diabetes_one_parent",
+        "kind": "binary",
+        "points_if_true": 56
+      },
+      {
+        "name": "diabetes_both_parents",
+        "kind": "binary",
+        "points_if_true": 106
+      },
+      {
+        "name": "diabetes_sibling",
+        "kind": "binary",
+        "points_if_true": 48
+      }
+    ],
+
+    "logic": {
+      "constraints": [
+        {
+          "name": "parent_history_precedence",
+          "description": "If both parents have diabetes, ignore one-parent flag to avoid double counting.",
+          "if": { "diabetes_both_parents": true },
+          "set": { "diabetes_one_parent": false }
+        }
+      ]
+    },
+
+    "risk_model": {
+      "type": "cox_points",
+      "horizon_years": 5,
+      "baseline_survival": 0.99061,
+      "mean_points": 474.17096591,
+      "scale_per_100_points": true
+    }
+  },
+
+  "clinical_extension": {
+    "inputs": [
+      { "name": "original_points", "kind": "derived_points" },
+      {
+        "name": "hba1c",
+        "kind": "continuous",
+        "units": "percent_ngsp",
+        "alt_units": [
+          {
+            "units": "mmol_per_mol_ifcc",
+            "to_percent_ngsp": "percent = (mmol_per_mol + 2.152) / 10.929"
+          }
+        ]
+      }
+    ],
+
+    "clinical_points": {
+      "type": "linear_combo",
+      "coefficients": {
+        "original_points": 0.9,
+        "hba1c": 63.8
+      }
+    },
+
+    "risk_model": {
+      "type": "cox_points",
+      "horizon_years": 5,
+      "baseline_survival": 0.99035,
+      "mean_points": 784.13834152,
+      "scale_per_100_points": true
+    }
+  },
+
+  "cut_points": {
+    "applies_to": "clinical_extension",
+    "horizon_years": 5,
+    "thresholds": [
+      { "abs_risk": 0.02, "approx_points": 838 },
+      { "abs_risk": 0.05, "approx_points": 932 },
+      { "abs_risk": 0.10, "approx_points": 1004 }
+    ]
+  }
+}

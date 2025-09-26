@@ -1,0 +1,74 @@
+{
+    "version": "1.0.0",
+    "model_id": "clivd_2022_chronic_liver_disease_modellab",
+    "meta": {
+      "display_name": "CLivD 15-year Risk of Advanced Chronic Liver Disease (Modellab)",
+      "source_citation": "Åberg F, Luukkonen PK, But A, et al. J Hepatol. 2022. Development and validation of a model to predict incident chronic liver disease in the general population: The CLivD score.",
+      "population_note": "Adults aged 40–70 years from FINRISK (1992–2012) and Health 2000 derivation cohorts; externally validated in Copenhagen City Heart Study.",
+      "units_convention": "SI. Alcohol in drinks/week (1 drink = 10 g ethanol); GGT in U/L; waist–hip ratio unitless.",
+      "outcome_definition": "Incident clinical liver disease (hospitalization, liver cancer, or liver-related death) within 15 years; death without liver disease treated as competing risk.",
+      "model_type": "Cause-specific Cox regression with restricted cubic splines for alcohol intake.",
+      "horizon_years": 15
+    },
+  
+    "shared_transform_helpers": {
+      "variable_truncation": {
+        "alcohol_drinks_per_week": { "truncate_max": 50, "note": "Set alcohol = 50 if reported >50 drinks/week." },
+        "ggt_ul": { "truncate_max": 200, "note": "Set GGT = 200 U/L if reported >200 U/L." }
+      },
+      "alcohol_spline_terms": {
+        "description": "Restricted cubic spline basis for alcohol intake (drinks/week) with knots at 0.1, 1, 3, 9, 33.",
+        "formulas": [
+          "s1 = pmax(alcohol - 0.1, 0)^3",
+          "s2 = pmax(alcohol - 1, 0)^3",
+          "s3 = pmax(alcohol - 3, 0)^3",
+          "s4 = pmax(alcohol - 9, 0)^3",
+          "s5 = pmax(alcohol - 33, 0)^3"
+        ]
+      }
+    },
+  
+    "model": {
+      "applies_when": { "ggt_available": true },
+      "inputs": [
+        { "name": "age", "kind": "continuous", "units": "years" },
+        { "name": "sex", "kind": "binary", "coding": { "male": 1, "female": 2 } },
+        { "name": "waist_hip_ratio", "kind": "continuous" },
+        { "name": "alcohol", "kind": "continuous", "units": "drinks_per_week", "truncate_max": 50 },
+        { "name": "ggt", "kind": "continuous", "units": "U/L", "truncate_max": 200 },
+        { "name": "diabetes", "kind": "binary", "coding": { "no": 0, "yes": 1 } },
+        { "name": "smoking", "kind": "binary", "coding": { "never_or_past": 2, "current": 1 } }
+      ],
+  
+      "linear_predictor": {
+        "intercept": -6.7922721,
+        "terms": [
+          { "name": "age", "coefficient": 0.044744302 },
+          { "name": "waist_hip_ratio_x10", "coefficient": 0.32961593, "formula": "waist_hip_ratio * 10" },
+          { "name": "alcohol_linear", "coefficient": 0.19860813 },
+          { "name": "alcohol_spline_s1", "coefficient": -0.0082096868, "formula_ref": "alcohol_spline_terms.s1" },
+          { "name": "alcohol_spline_s2", "coefficient": 0.010575035, "formula_ref": "alcohol_spline_terms.s2" },
+          { "name": "alcohol_spline_s3", "coefficient": -0.002004756, "formula_ref": "alcohol_spline_terms.s3" },
+          { "name": "alcohol_spline_s4", "coefficient": -0.00033998925, "formula_ref": "alcohol_spline_terms.s4" },
+          { "name": "alcohol_spline_s5", "coefficient": -0.000020602882, "formula_ref": "alcohol_spline_terms.s5" },
+          { "name": "ggt", "coefficient": 0.011813962 },
+          { "name": "female_indicator", "coefficient": 0.18721469, "formula": "1 if sex == 2 else 0" },
+          { "name": "diabetes_yes", "coefficient": 0.55249734, "formula": "1 if diabetes == 1 else 0" },
+          { "name": "smoking_current", "coefficient": 0.74679941, "formula": "1 if smoking == 1 else 0" },
+          { "name": "interaction_female_x_ggt", "coefficient": 0.0054325769, "formula": "ggt * (1 if sex == 2 else 0)" },
+          { "name": "interaction_female_x_smoking", "coefficient": -0.64903176, "formula": "(1 if sex == 2 else 0) * (1 if smoking == 1 else 0)" }
+        ],
+        "provenance": "Coefficients and transformations from supplementary risk equation (R code)."
+      }
+    },
+  
+    "output": {
+      "name": "clivd_modellab_linear_predictor",
+      "units": "log_hazard_score",
+      "notes": [
+        "This is a Cox model linear predictor (relative risk score).",
+        "To derive absolute 15-year risk with competing risks, a baseline cumulative hazard and competing-risk framework are required; thresholds for risk-grouping were provided in the paper but a full baseline hazard was not published."
+      ]
+    }
+  }
+  

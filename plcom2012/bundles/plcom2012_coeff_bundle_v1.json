@@ -1,0 +1,116 @@
+{
+    "version": "1.0.0",
+    "model_id": "plcom2012_lung_cancer_6y",
+    "meta": {
+      "display_name": "PLCOM2012 6-year Risk of Lung Cancer (ever-smokers)",
+      "source_citation": "Tammemägi MC, Katki HA, Hocking WG, et al. Selection Criteria for Lung-Cancer Screening. N Engl J Med. 2013;368:728–736.",
+      "population_note": "Developed/validated in PLCO ever-smokers aged 55–74; also evaluated in NLST. Model excludes never-smokers.",
+      "units_convention": "Age years; BMI kg/m²; smoking intensity cigarettes/day; durations/quit time years.",
+      "outcome_definition": "Probability of lung cancer diagnosis within 6 years of baseline.",
+      "model_type": "Logistic regression",
+      "horizon_years": 6
+    },
+  
+    "shared_transform_helpers": {
+      "centering": {
+        "age_years_center": 62.0,
+        "education_level_center": 4.0,
+        "bmi_center": 27.0,
+        "smoking_duration_years_center": 27.0,
+        "quit_time_years_center": 10.0,
+        "note": "Education levels: 1=<HS, 2=HS grad, 3=post-HS training, 4=some college, 5=college grad, 6=postgrad/professional."
+      },
+      "smoking_intensity_transform": {
+        "description": "Nonlinear transform used in PLCOM2012 logistic model.",
+        "steps": [
+          "x = (cigarettes_per_day / 10.0)",
+          "t = x ** (-1.0)",
+          "intensity_term = t - 0.4021541613"
+        ],
+        "provenance": "Table 2 and Supplement Table S3 specify scaling, inverse power, and centering constant (logistic uses 0.4021541613)."
+      },
+      "coding_rules": {
+        "smoking_status": "current vs former; model excludes never-smokers.",
+        "quit_time_for_current_smokers": "Set quit_time_years = 0 for current smokers (applies to centered term).",
+        "race_reference": "White is the reference category."
+      }
+    },
+  
+    "model": {
+      "inputs": [
+        { "name": "age_years", "kind": "continuous", "units": "years", "center": 62.0 },
+        {
+          "name": "race_ethnicity",
+          "kind": "categorical",
+          "categories": [
+            { "code": "white",  "label": "White (reference)" },
+            { "code": "black",  "label": "Black" },
+            { "code": "hispanic", "label": "Hispanic" },
+            { "code": "asian",  "label": "Asian" },
+            { "code": "american_indian_alaska_native", "label": "American Indian or Alaskan Native" },
+            { "code": "native_hawaiian_pacific_islander", "label": "Native Hawaiian or Pacific Islander" }
+          ]
+        },
+        { "name": "education_level", "kind": "ordinal_int_1_6", "center": 4 },
+        { "name": "bmi", "kind": "continuous", "units": "kg_per_m2", "center": 27.0 },
+        { "name": "copd", "kind": "binary", "coding": { "no": 0, "yes": 1 } },
+        { "name": "personal_history_cancer", "kind": "binary", "coding": { "no": 0, "yes": 1 } },
+        { "name": "family_history_lung_cancer", "kind": "binary", "coding": { "no": 0, "yes": 1 } },
+        { "name": "smoking_status", "kind": "categorical", "categories": [ { "code": "former" }, { "code": "current" } ] },
+        {
+          "name": "smoking_intensity_cigs_per_day",
+          "kind": "continuous",
+          "units": "cigarettes_per_day",
+          "transform": "plcom2012_intensity",
+          "transform_detail_ref": "shared_transform_helpers.smoking_intensity_transform"
+        },
+        { "name": "smoking_duration_years", "kind": "continuous", "units": "years", "center": 27.0 },
+        { "name": "quit_time_years", "kind": "continuous", "units": "years", "center": 10.0, "note": "Use 0 for current smokers." }
+      ],
+  
+      "linear_predictor": {
+        "intercept": -4.532506,
+        "terms": [
+          { "name": "age_centered", "coefficient": 0.0778868, "formula": "(age_years - 62.0)" },
+  
+          { "name": "race_black", "coefficient": 0.3944778, "formula": "1 if race_ethnicity=='black' else 0" },
+          { "name": "race_hispanic", "coefficient": -0.7434744, "formula": "1 if race_ethnicity=='hispanic' else 0" },
+          { "name": "race_asian", "coefficient": -0.466585, "formula": "1 if race_ethnicity=='asian' else 0" },
+          { "name": "race_ai_an", "coefficient": 0.0, "formula": "1 if race_ethnicity=='american_indian_alaska_native' else 0" },
+          { "name": "race_nh_pi", "coefficient": 1.027152, "formula": "1 if race_ethnicity=='native_hawaiian_pacific_islander' else 0" },
+  
+          { "name": "education_centered", "coefficient": -0.0812744, "formula": "(education_level - 4.0)" },
+          { "name": "bmi_centered", "coefficient": -0.0274194, "formula": "(bmi - 27.0)" },
+  
+          { "name": "copd_yes", "coefficient": 0.3553063, "formula": "1 if copd==1 else 0" },
+          { "name": "personal_cancer_yes", "coefficient": 0.4589971, "formula": "1 if personal_history_cancer==1 else 0" },
+          { "name": "family_lung_cancer_yes", "coefficient": 0.587185, "formula": "1 if family_history_lung_cancer==1 else 0" },
+  
+          { "name": "smoking_current", "coefficient": 0.2597431, "formula": "1 if smoking_status=='current' else 0" },
+  
+          { "name": "smoking_intensity_term", "coefficient": -1.822606, "formula": "( (smoking_intensity_cigs_per_day/10.0) ** -1.0 ) - 0.4021541613" },
+  
+          { "name": "smoking_duration_centered", "coefficient": 0.0317321, "formula": "(smoking_duration_years - 27.0)" },
+          { "name": "quit_time_centered", "coefficient": -0.0308572, "formula": "(quit_time_years - 10.0)" }
+        ],
+        "provenance": "Table 2 (NEJM 2013) and Supplement Table S3 (logistic model)."
+      },
+  
+      "risk_model": {
+        "type": "logistic",
+        "horizon_years": 6,
+        "formula": "p6y = 1.0 / (1.0 + exp(-(intercept + Σ(coef_i * term_i))))"
+      }
+    },
+  
+    "output": { "name": "risk_lung_cancer_6y", "units": "probability_0_1" },
+  
+    "validation_and_usage_notes": [
+      "Applies to ever-smokers; model excludes never-smokers.",
+      "Set quit_time_years = 0 for current smokers.",
+      "Continuous variables use centering constants shown; smoking intensity uses the inverse transform and centering constant 0.4021541613 (logistic model).",
+      "Race: White is reference; American Indian/Alaskan Native coefficient is 0 in the published logistic model.",
+      "Risk horizon is 6 years; output is absolute probability in [0,1].",
+      "Developed in PLCO control smokers and validated in PLCO intervention and NLST datasets."
+    ]
+  }  

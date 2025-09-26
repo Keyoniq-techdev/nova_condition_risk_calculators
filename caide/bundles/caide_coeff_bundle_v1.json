@@ -1,0 +1,227 @@
+{
+    "version": "1.0.0",
+    "model_id": "caide_dementia_2006",
+    "meta": {
+      "display_name": "2006 CAIDE 20-year Dementia Risk Score",
+      "source": "CAIDE (Cardiovascular Risk Factors, Aging and Dementia) Study",
+      "doi": "10.1016/S1474-4422(06)70537-3",
+      "population_note": "Adults aged 39–64 at baseline; prediction horizon ~20 years among survivors to follow-up",
+      "units_convention": "SI",
+      "notes": [
+        "Predicts late-life all-cause dementia using midlife risk factors.",
+        "Two models provided: Model 1 (basic) and Model 2 (adds APOE ε4).",
+        "Integer points were derived by multiplying β by 2.5 and rounding to the nearest integer.",
+        "Physical activity: 'Active' = leisure activity ≥2×/week, 20–30 min causing sweating/breathlessness; otherwise 'Inactive'.",
+        "External validation and contemporary recalibration may be required outside the source population."
+      ],
+      "horizon_years": 20,
+      "auc": {
+        "model_1_basic": { "auc": 0.769, "ci": [0.709, 0.829] },
+        "model_2_apoe":  { "auc": 0.776, "ci": [0.717, 0.836] }
+      }
+    },
+  
+    "model_1_basic": {
+      "variables": [
+        {
+          "name": "age",
+          "kind": "categorical",
+          "units": "years",
+          "categories": [
+            { "code": "<47",  "label": "<47",  "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "47-53","label": "47–53","beta": 1.084, "points": 3 },
+            { "code": ">53",  "label": ">53",  "beta": 1.762, "points": 4 }
+          ]
+        },
+        {
+          "name": "education_years",
+          "kind": "categorical",
+          "units": "years",
+          "categories": [
+            { "code": "ge10", "label": "≥10", "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "7-9",  "label": "7–9", "beta": 0.910, "points": 2 },
+            { "code": "0-6",  "label": "0–6", "beta": 1.281, "points": 3 }
+          ]
+        },
+        {
+          "name": "sex",
+          "kind": "categorical",
+          "categories": [
+            { "code": "female", "label": "Female", "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "male",   "label": "Male",   "beta": 0.470, "points": 1 }
+          ]
+        },
+        {
+          "name": "sbp_over_140",
+          "kind": "binary",
+          "units": "mmHg",
+          "threshold": { "sbp_mmHg": 140, "operator": ">" },
+          "beta_if_true": 0.791,
+          "points_if_true": 2,
+          "reference_definition": "≤140 mmHg"
+        },
+        {
+          "name": "bmi_over_30",
+          "kind": "binary",
+          "units": "kg_per_m2",
+          "threshold": { "bmi": 30, "operator": ">" },
+          "beta_if_true": 0.831,
+          "points_if_true": 2,
+          "reference_definition": "≤30 kg/m²"
+        },
+        {
+          "name": "total_chol_over_6_5",
+          "kind": "binary",
+          "units": "mmol_per_L",
+          "threshold": { "chol_mmol_per_L": 6.5, "operator": ">" },
+          "beta_if_true": 0.631,
+          "points_if_true": 2,
+          "reference_definition": "≤6.5 mmol/L"
+        },
+        {
+          "name": "physically_inactive",
+          "kind": "binary",
+          "definition": "Inactive if <2×/week, else Active",
+          "beta_if_true": 0.527,
+          "points_if_true": 1,
+          "reference_definition": "Active"
+        }
+      ],
+  
+      "logistic_model_raw_betas": {
+        "intercept": -7.642,
+        "followup_time_years_coef": 0.093,
+        "followup_time_years_for_risk": 20,
+        "include_note": "Raw logistic model with categorical/binary predictors; follow-up time was included as covariate."
+      },
+  
+      "points_mapping": {
+        "scaling_note": "points = round(beta * 2.5)",
+        "max_observed_points": 15
+      },
+  
+      "logistic_on_points": {
+        "formula": "P = 1 / (1 + exp(-(beta0 + beta1 + beta2 * points)))",
+        "beta0": -7.406,
+        "beta1_followup20y": 0.796,
+        "beta2_per_point": 0.401
+      },
+  
+      "risk_bins": [
+        { "points_range": [0, 5],  "abs_risk": 0.010 },
+        { "points_range": [6, 7],  "abs_risk": 0.019 },
+        { "points_range": [8, 9],  "abs_risk": 0.042 },
+        { "points_range": [10, 11],"abs_risk": 0.074 },
+        { "points_range": [12, 15],"abs_risk": 0.164 }
+      ],
+  
+      "operating_points": [
+        { "threshold_points": 9,  "sensitivity": 0.77, "specificity": 0.63, "npv": 0.98, "ppv": 0.09 },
+        { "threshold_points": 10, "sensitivity": 0.63, "specificity": 0.75, "npv": 0.98, "ppv": 0.10 }
+      ]
+    },
+  
+    "model_2_apoe": {
+      "variables": [
+        {
+          "name": "age",
+          "kind": "categorical",
+          "units": "years",
+          "categories": [
+            { "code": "<47",  "label": "<47",  "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "47-53","label": "47–53","beta": 1.155, "points": 3 },
+            { "code": ">53",  "label": ">53",  "beta": 1.874, "points": 5 }
+          ]
+        },
+        {
+          "name": "education_years",
+          "kind": "categorical",
+          "units": "years",
+          "categories": [
+            { "code": "ge10", "label": "≥10", "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "7-9",  "label": "7–9", "beta": 1.149, "points": 3 },
+            { "code": "0-6",  "label": "0–6", "beta": 1.587, "points": 4 }
+          ]
+        },
+        {
+          "name": "sex",
+          "kind": "categorical",
+          "categories": [
+            { "code": "female", "label": "Female", "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "male",   "label": "Male",   "beta": 0.438, "points": 1 }
+          ]
+        },
+        {
+          "name": "sbp_over_140",
+          "kind": "binary",
+          "units": "mmHg",
+          "threshold": { "sbp_mmHg": 140, "operator": ">" },
+          "beta_if_true": 0.817,
+          "points_if_true": 2
+        },
+        {
+          "name": "bmi_over_30",
+          "kind": "binary",
+          "units": "kg_per_m2",
+          "threshold": { "bmi": 30, "operator": ">" },
+          "beta_if_true": 0.608,
+          "points_if_true": 2
+        },
+        {
+          "name": "total_chol_over_6_5",
+          "kind": "binary",
+          "units": "mmol_per_L",
+          "threshold": { "chol_mmol_per_L": 6.5, "operator": ">" },
+          "beta_if_true": 0.460,
+          "points_if_true": 1
+        },
+        {
+          "name": "physically_inactive",
+          "kind": "binary",
+          "definition": "Inactive if <2×/week, else Active",
+          "beta_if_true": 0.579,
+          "points_if_true": 1
+        },
+        {
+          "name": "apoe_status",
+          "kind": "categorical",
+          "categories": [
+            { "code": "non_e4", "label": "Non-ε4", "beta": 0.0,   "points": 0, "reference": true },
+            { "code": "e4",     "label": "ε4 carrier", "beta": 0.890, "points": 2 }
+          ]
+        }
+      ],
+  
+      "logistic_model_raw_betas": {
+        "intercept": -8.203,
+        "followup_time_years_coef": 0.093,
+        "followup_time_years_for_risk": 20
+      },
+  
+      "points_mapping": {
+        "scaling_note": "points = round(beta * 2.5)",
+        "max_observed_points": 18
+      },
+  
+      "logistic_on_points": {
+        "formula": "P = 1 / (1 + exp(-(beta0 + beta1 + beta2 * points)))",
+        "beta0": -8.083,
+        "beta1_followup20y": 1.020,
+        "beta2_per_point": 0.390
+      },
+  
+      "risk_bins": [
+        { "points_range": [0, 5],   "abs_risk": 0.003 },
+        { "points_range": [6, 8],   "abs_risk": 0.017 },
+        { "points_range": [9, 10],  "abs_risk": 0.046 },
+        { "points_range": [11, 12], "abs_risk": 0.044 },
+        { "points_range": [13, 18], "abs_risk": 0.163 }
+      ],
+  
+      "operating_points": [
+        { "threshold_points": 10, "sensitivity": 0.81, "specificity": 0.61, "npv": 0.99, "ppv": 0.09 },
+        { "threshold_points": 11, "sensitivity": 0.67, "specificity": 0.72, "npv": 0.98, "ppv": 0.10 }
+      ]
+    }
+  }
+  

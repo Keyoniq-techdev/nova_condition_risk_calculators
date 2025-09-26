@@ -1,0 +1,97 @@
+{
+    "version": "1.0.0",
+    "model_id": "haroon_2014_cprd_copd_casefinding",
+    "meta": {
+      "display_name": "2014 CPRD COPD Case-Finding Score (Haroon et al.)",
+      "source": "BMJ Open Respiratory Research (CPRD / GPRD primary care records, UK)",
+      "population_note": "Adults ≥35 years in UK primary care; model targets probability of undiagnosed (prevalent) COPD for case-finding, not future incidence.",
+      "units_convention": "none",
+      "notes": [
+        "Derivation: matched case–control using CPRD (GPRD) data, 2000–2006.",
+        "Look-back window: 3 years; exclude data recorded within 60 days prior to index to reduce diagnostic work-up bias.",
+        "Conditional logistic regression; intercept not identifiable in case–control design—use linear score and operating thresholds, or externally calibrate if absolute probabilities are required.",
+        "Performance reported for assumed undiagnosed COPD prevalence of 5.5% in adults ≥35 years.",
+        "Smoking status uses a specific 'missing' category as per the original model."
+      ]
+    },
+  
+    "inputs": [
+      {
+        "name": "smoking_status",
+        "kind": "categorical",
+        "allow_unknown": false,
+        "categories": [
+          { "code": "never",   "label": "Never smoker" },
+          { "code": "former",  "label": "Former smoker" },
+          { "code": "current", "label": "Current smoker" },
+          { "code": "missing", "label": "Smoking status missing" }
+        ]
+      },
+      {
+        "name": "asthma_history",
+        "kind": "binary",
+        "definition": "Ever previously diagnosed asthma."
+      },
+      {
+        "name": "lrti_count_3y",
+        "kind": "categorical",
+        "definition": "Number of lower respiratory tract infections (coded) within the past 3 years, excluding the 60 days prior to index.",
+        "categories": [
+          { "code": "0",  "label": "None" },
+          { "code": "1",  "label": "Exactly one" },
+          { "code": ">1", "label": "More than one" }
+        ]
+      },
+      {
+        "name": "salbutamol_3y",
+        "kind": "binary",
+        "definition": "Any prescription for salbutamol within the past 3 years, excluding the 60 days prior to index."
+      }
+    ],
+  
+    "feature_engineering": {
+      "lookback_years": 3,
+      "exclude_days_prior_to_index": 60,
+      "index_note": "For batch case-finding, 'index' can be the date of running the algorithm."
+    },
+  
+    "score_model": {
+      "type": "linear_combination_no_intercept",
+      "equation_note": "Sum of β * indicator for present category; reference levels have β = 0.",
+      "coefficients": {
+        "smoking_status": {
+          "never":   0.0,
+          "former":  1.55,
+          "current": 2.46,
+          "missing": 0.89
+        },
+        "asthma_history": 0.75,
+        "lrti_count_3y": {
+          "0":  0.0,
+          "1":  0.94,
+          ">1": 1.46
+        },
+        "salbutamol_3y": 1.93
+      },
+      "example": {
+        "description": "Former smoker, asthma history, >1 LRTI in last 3y, salbutamol in last 3y",
+        "score": 5.69,
+        "calculation": "(former × 1.55) + (asthma × 0.75) + (>1 LRTI × 1.46) + (salbutamol × 1.93)"
+      },
+      "calibration": {
+        "intercept_present": false,
+        "note": "If absolute probabilities are needed, fit an intercept on local data (same feature set) using known COPD prevalence and case definition, or apply Platt/Logit recalibration against confirmed COPD outcomes."
+      }
+    },
+    "cut_points": {
+        "applies_to": "score_model",
+        "thresholds": [
+            {
+                "score_threshold": 2.5,
+                "label": "recommended",
+                "note": "Haroon et al. external validation; ~63% sensitivity, ~87% specificity, PPV ~23% assuming 5.5% prevalence"
+            }
+        ]
+    }
+  }
+  

@@ -1,0 +1,131 @@
+{
+    "version": "1.0.0",
+    "model_id": "ckdpc_2019_incident_ckd_egfr_lt60_all_events",
+    "meta": {
+      "display_name": "CKD-PC 5-year Risk of Incident eGFR <60 (All Events)",
+      "source_citation": "Nelson RG, Grams ME, Ballew SH, et al. JAMA. 2019; Development of Risk Prediction Equations for Incident CKD.",
+      "population_note": "Adults with baseline eGFR >60 mL/min/1.73m²; separate equations for non-diabetic vs diabetic populations.",
+      "units_convention": "SI (eGFR mL/min/1.73m²; ACR mg/g; HbA1c percent)",
+      "egfr_method": "CKD-EPI 2009 creatinine equation (IDMS-standardized creatinine), as used by CKD-PC.",
+      "outcome_definition": "Incident eGFR <60 mL/min/1.73m² within 5 years (all events = confirmed + unconfirmed).",
+      "model_type": "Fine-Gray competing risk with Weibull baseline",
+      "horizon_years": 5
+    },
+  
+    "shared_transform_helpers": {
+      "egfr_terms": {
+        "description": "Piecewise linear terms around 90 mL/min/1.73m² using 5-unit scales.",
+        "terms": [
+          { "name": "egfr_low_component",  "formula": "(15 - min(eGFR, 90) / 5.0)" },
+          { "name": "egfr_high_component", "formula": "max(0.0, eGFR - 90) / 5.0" }
+        ]
+      },
+      "bmi_centered_per5": { "formula": "(BMI / 5.0) - 5.4" },
+      "age_centered_per5": { "formula": "(age / 5.0) - 11.0" },
+      "expected_log10acr_nondiabetic": {
+        "description": "Expected log10(ACR) used only in the non-diabetes model.",
+        "formula": "0.6754442 + 0.0222581 * ((age / 5.0) - 11.0) + 0.045902 * female + (-0.0340495) * black + 0.0085871 * (15.0 - min(eGFR, 90.0) / 5.0) + (-0.0275825) * (max(0.0, eGFR - 90.0) / 5.0) + 0.0495695 * history_cvd + 0.0381086 * ever_smoker + 0.1286836 * hypertensive + 0.0218783 * ((BMI / 5.0) - 5.4)"
+      }
+    },
+  
+    "models": {
+      "nondiabetic": {
+        "applies_when": { "diabetes": false },
+        "inputs": [
+          { "name": "age", "kind": "continuous", "units": "years" },
+          { "name": "female", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "black", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "eGFR", "kind": "continuous", "units": "mL/min/1.73m2" },
+          { "name": "history_cvd", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "ever_smoker", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "hypertensive", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "BMI", "kind": "continuous", "units": "kg/m2" },
+          { "name": "ACR", "kind": "continuous", "units": "mg/g", "transform": "log10" }
+        ],
+        "linear_predictor": {
+          "intercept": -3.609661,
+          "terms": [
+            { "name": "age_centered_per5", "coefficient": 0.2582196 },
+            { "name": "female",             "coefficient": 0.1821665 },
+            { "name": "black",              "coefficient": 0.1808945 },
+            { "name": "egfr_low_component", "coefficient": 0.4581006 },
+            { "name": "egfr_high_component","coefficient": -0.3159218 },
+            { "name": "history_cvd",        "coefficient": 0.1953927 },
+            { "name": "ever_smoker",        "coefficient": 0.1213741 },
+            { "name": "hypertensive",       "coefficient": 0.3543645 },
+            { "name": "bmi_centered_per5",  "coefficient": 0.0630538 },
+            { "name": "albuminuria_term",   "coefficient": 0.3519087, "formula": "log10(ACR) - expected_log10acr" }
+          ]
+        },
+        "risk_model": {
+          "type": "fine_gray_weibull",
+          "horizon_years": 5,
+          "gamma": 1.055408,
+          "formula": "risk = 1 - exp( - pow(5, gamma) * exp(linear_predictor) )"
+        }
+      },
+
+      "diabetic": {
+        "applies_when": { "diabetes": true },
+        "inputs": [
+          { "name": "age", "kind": "continuous", "units": "years" },
+          { "name": "female", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "black", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "eGFR", "kind": "continuous", "units": "mL/min/1.73m2" },
+          { "name": "history_cvd", "kind": "binary", "coding": { "false": 0, "true": 1 } },
+          { "name": "hba1c", "kind": "continuous", "units": "percent_ngsp" },
+          {
+            "name": "dm_medication_status",
+            "kind": "categorical",
+            "categories": [
+              { "code": "oral",   "label": "Oral DM medications (reference)" },
+              { "code": "insulin","label": "Insulin use" },
+              { "code": "no_meds","label": "No diabetes medications" }
+            ]
+          },
+          { "name": "ever_smoker", "kind": "binary" },
+          { "name": "hypertensive", "kind": "binary" },
+          { "name": "BMI", "kind": "continuous", "units": "kg/m2" },
+          { "name": "ACR", "kind": "continuous", "units": "mg/g", "transform": "log10" }
+        ],
+        "linear_predictor": {
+          "intercept": -2.647004,
+          "terms": [
+            { "name": "age_centered_per5", "coefficient": 0.1351572 },
+            { "name": "female",            "coefficient": 0.1381975 },
+            { "name": "black",             "coefficient": 0.0920208 },
+            { "name": "egfr_low_component","coefficient": 0.3546697 },
+            { "name": "egfr_high_component","coefficient": -0.1525133 },
+            { "name": "history_cvd",       "coefficient": 0.1870637 },
+
+            { "name": "hba1c_centered",    "coefficient": 0.0619679, "formula": "(hba1c - 7.0)" },
+            { "name": "insulin_indicator", "coefficient": 0.1078296, "formula": "1 if dm_medication_status == 'insulin' else 0" },
+            { "name": "no_meds_indicator", "coefficient": -0.150944, "formula": "1 if dm_medication_status == 'no_meds' else 0" },
+            { "name": "interaction_hba1c_insulin", "coefficient": 0.023959, "formula": "(hba1c - 7.0) * (1 if dm_medication_status == 'insulin' else 0)" },
+            { "name": "interaction_hba1c_no_meds", "coefficient": 0.0398424, "formula": "(hba1c - 7.0) * (1 if dm_medication_status == 'no_meds' else 0)" },
+
+            { "name": "ever_smoker",       "coefficient": -0.00084 },
+            { "name": "hypertensive",      "coefficient": 0.3653268 },
+            { "name": "bmi_centered_per5", "coefficient": 0.050306 },
+            { "name": "albuminuria_term",  "coefficient": 0.3737905, "formula": "log10(ACR) - 1.0" }
+          ]
+        },
+        "risk_model": {
+          "type": "fine_gray_weibull",
+          "horizon_years": 5,
+          "gamma": 0.9766551,
+          "formula": "risk = 1 - exp( - pow(5, gamma) * exp(linear_predictor) )"
+        }
+      }
+    },
+
+    "output": { "name": "risk_ckd_5y", "units": "probability_0_1" },
+  
+    "validation_and_usage_notes": [
+      "All variables must reflect baseline status; apply only if baseline eGFR >60.",
+      "Compute eGFR using CKD-EPI (2009) with IDMS-standardized creatinine.",
+      "ACR is urine albumin-to-creatinine ratio in mg/g; use log10 transform per model.",
+      "Non-diabetic model uses expected_log10ACR helper (included) to center the ACR term; diabetic model centers ACR at log10(10 mg/g) = 1."
+    ]
+  }
+  

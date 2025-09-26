@@ -1,0 +1,182 @@
+{
+  "model": "SCORE2",
+  "version": "1.0.0",
+  "last_updated": "2025-09-24",
+  "source": {
+    "paper": "SCORE2 risk prediction algorithms: new models to estimate 10-year risk of cardiovascular disease in Europe",
+    "doi": "10.1093/EURHEARTJ/EHAB309"
+  },
+  "units": {
+    "age": "years",
+    "sbp": "mmHg",
+    "tchol": "mmol/L",
+    "hdl": "mmol/L"
+  },
+  "baseline_survival": {
+    "male": 0.9605,
+    "female": 0.9776
+  },
+  "notes": "Any modeling notes or caveats",
+  "by_region": {
+    "high": {
+      "male": {
+        "region_params": [
+          0.3207,
+          0.936
+        ],
+        "betas": {
+          "cage": 0.3742,
+          "smoke": 0.6012,
+          "csbp": 0.2777,
+          "ctchol": 0.1458,
+          "chdl": -0.2698,
+          "cage*smoke": -0.0755,
+          "cage*csbp": -0.0255,
+          "cage*ctchol": -0.0281,
+          "cage*chdl": 0.0426,
+          "diab": 0.6457,
+          "cage*diab": -0.0983
+        }
+      },
+      "female": {
+        "region_params": [
+          0.571,
+          0.9369
+        ],
+        "betas": {
+          "cage": 0.4648,
+          "smoke": 0.7744,
+          "csbp": 0.3131,
+          "ctchol": 0.1002,
+          "chdl": -0.2606,
+          "cage*smoke": -0.1088,
+          "cage*csbp": -0.0277,
+          "cage*ctchol": -0.0226,
+          "cage*chdl": 0.0613,
+          "diab": 0.8096,
+          "cage*diab": -0.1272
+        }
+      }
+    },
+    "low": {
+      "male": {
+        "region_params": [
+          -0.5699,
+          0.7476
+        ],
+        "betas": {
+          "cage": 0.3742,
+          "smoke": 0.6012,
+          "csbp": 0.2777,
+          "ctchol": 0.1458,
+          "chdl": -0.2698,
+          "cage*smoke": -0.0755,
+          "cage*csbp": -0.0255,
+          "cage*ctchol": -0.0281,
+          "cage*chdl": 0.0426,
+          "diab": 0.6457,
+          "cage*diab": -0.0983
+        }
+      },
+      "female": {
+        "region_params": [
+          -0.738,
+          0.7019
+        ],
+        "betas": {
+          "cage": 0.4648,
+          "smoke": 0.7744,
+          "csbp": 0.3131,
+          "ctchol": 0.1002,
+          "chdl": -0.2606,
+          "cage*smoke": -0.1088,
+          "cage*csbp": -0.0277,
+          "cage*ctchol": -0.0226,
+          "cage*chdl": 0.0613,
+          "diab": 0.8096,
+          "cage*diab": -0.1272
+        }
+      }
+    },
+    "moderate": {
+      "male": {
+        "region_params": [
+          -0.1565,
+          0.8009
+        ],
+        "betas": {
+          "cage": 0.3742,
+          "smoke": 0.6012,
+          "csbp": 0.2777,
+          "ctchol": 0.1458,
+          "chdl": -0.2698,
+          "cage*smoke": -0.0755,
+          "cage*csbp": -0.0255,
+          "cage*ctchol": -0.0281,
+          "cage*chdl": 0.0426,
+          "diab": 0.6457,
+          "cage*diab": -0.0983
+        }
+      },
+      "female": {
+        "region_params": [
+          -0.3143,
+          0.7701
+        ],
+        "betas": {
+          "cage": 0.4648,
+          "smoke": 0.7744,
+          "csbp": 0.3131,
+          "ctchol": 0.1002,
+          "chdl": -0.2606,
+          "cage*smoke": -0.1088,
+          "cage*csbp": -0.0277,
+          "cage*ctchol": -0.0226,
+          "cage*chdl": 0.0613,
+          "diab": 0.8096,
+          "cage*diab": -0.1272
+        }
+      }
+    },
+    "very_high": {
+      "male": {
+        "region_params": [
+          0.5836,
+          0.8294
+        ],
+        "betas": {
+          "cage": 0.3742,
+          "smoke": 0.6012,
+          "csbp": 0.2777,
+          "ctchol": 0.1458,
+          "chdl": -0.2698,
+          "cage*smoke": -0.0755,
+          "cage*csbp": -0.0255,
+          "cage*ctchol": -0.0281,
+          "cage*chdl": 0.0426,
+          "diab": 0.6457,
+          "cage*diab": -0.0983
+        }
+      },
+      "female": {
+        "region_params": [
+          0.9412,
+          0.8329
+        ],
+        "betas": {
+          "cage": 0.4648,
+          "smoke": 0.7744,
+          "csbp": 0.3131,
+          "ctchol": 0.1002,
+          "chdl": -0.2606,
+          "cage*smoke": -0.1088,
+          "cage*csbp": -0.0277,
+          "cage*ctchol": -0.0226,
+          "cage*chdl": 0.0613,
+          "diab": 0.8096,
+          "cage*diab": -0.1272
+        }
+      }
+    }
+  }
+}
