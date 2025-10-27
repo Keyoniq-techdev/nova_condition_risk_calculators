@@ -12,8 +12,8 @@ def score2_risk(
     sbp: float,            # mmHg
     tchol: float,          # mmol/L
     hdl: float,            # mmol/L
-    region: str,           # "low" | "moderate" | "high" | "very_high"
-    bundle: Dict
+    bundle: Dict,
+    region="low"          # based on country of residence
 ) -> float:
     """
     Returns 10-year CVD risk in percent, using the merged SCORE2 coeff bundle.
@@ -72,3 +72,4 @@ def score2_risk(
     p_reg = 1.0 - math.exp(-math.exp(x_adj))
 
     return float(p_reg * 100.0)
+
