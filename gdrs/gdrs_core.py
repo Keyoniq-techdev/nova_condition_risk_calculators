@@ -9,7 +9,7 @@ SmokingCat = Literal["never", "former_lt20", "former_ge20", "current_lt20", "cur
 
 def gdrs(
     age: int,
-    height: float,                  # cm
+    height: float,                  # m
     waist: float,                   # cm
     hypertension: bool,
     exercise: float,                # h/week
@@ -88,7 +88,7 @@ def gdrs(
     # original points
     original_points = (
         w_age * age +
-        w_height * height +
+        w_height * (height*100) + # model needs height in cm
         w_waist * waist +
         (p_hyp if hypertension else 0.0) +
         w_exercise * exercise +
