@@ -18,28 +18,26 @@ from score2_core import score2_risk, load_coeff_bundle
 # load coefficients
 bundle = load_coeff_bundle("score2_coeff_bundle_v1.json")
 
-# Example 1: male, smoker, age 60
+# Example 1: male, smoker, age 50
 risk_male = score2_risk(
-    age=60,
+    age=50,
     sex="male",
     smoker=True,
     sbp=140,
-    tchol=5.2,
-    hdl=1.2,
-    region="moderate",
+    tchol=5.5,
+    hdl=1.3,
     bundle=bundle
 )
 print(f"Male example risk: {risk_male:.2f}%")
 
-# Example 2: female, non-smoker, age 60
+# Example 2: female, smoker, age 50
 risk_female = score2_risk(
-    age=60,
+    age=50,
     sex="female",
-    smoker=False,
+    smoker=True,
     sbp=140,
-    tchol=5.2,
-    hdl=1.2,
-    region="moderate",
+    tchol=5.5,
+    hdl=1.3,
     bundle=bundle
 )
 print(f"Female example risk: {risk_female:.2f}%")
@@ -48,8 +46,8 @@ print(f"Female example risk: {risk_female:.2f}%")
 ### Output
 
 ```
-Male example risk: 11.80%
-Female example risk: 4.80%
+Male example risk: 5.9%
+Female example risk: 4.2%
 ```
 
 ---
@@ -62,7 +60,7 @@ Female example risk: 4.80%
 - **sbp**: systolic blood pressure, mmHg
 - **tchol**: total cholesterol, mmol/L
 - **hdl**: HDL cholesterol, mmol/L
-- **region**: one of "low", "moderate", "high", "very_high"
+- **region**: one of "low", "moderate", "high", "very_high" (default is "low" for Switzerland risk region)
 - **bundle**: loaded coefficient file (score2_coeff_bundle_v1.json)
 
 ---
