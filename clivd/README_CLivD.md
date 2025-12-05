@@ -88,4 +88,4 @@ A dictionary containing:
 - Åberg F, Luukkonen PK, But A, et al.  
   *Development and validation of a model to predict incident chronic liver disease in the general population: The CLivD score.*  
   J Hepatol. 2022;77(1):111–120.  
-  doi:10.1016/j.jhep.2022.02.016  
+  doi: 10.1016/j.jhep.2022.02.021   
