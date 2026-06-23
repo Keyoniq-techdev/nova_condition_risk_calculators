@@ -1,12 +1,14 @@
 import json, math
-from typing import Dict, Literal
+from typing import Dict, Literal, Tuple
 from ..common.io import load_bundle as _load_pkg_bundle
+from ..common.io import returns_nan_on_missing
 
 def load_gdrs_bundle(filename: str = "gdrs_coeff_bundle_v1.json"):
     return _load_pkg_bundle("risk_calculators.gdrs.bundles", filename)
 
 SmokingCat = Literal["never", "former_lt20", "former_ge20", "current_lt20", "current_ge20"]
 
+@returns_nan_on_missing
 def gdrs(
     age: int,
     height: float,                  # m
@@ -22,7 +24,7 @@ def gdrs(
     diabetes_sibling: bool,
     hba1c: float,
     bundle: Dict
-) -> float:
+) -> Tuple[float, str]:
     """
     Returns 5-year *clinical* GDRS risk (%) using parameters read from the JSON bundle.
     """
@@ -105,4 +107,7 @@ def gdrs(
     clinical_points = op_mult * original_points + hba1c_mult * hba1c + intercept
     p_clinical = 1.0 - (s0_clin ** (math.exp((clinical_points - mean_clin) / scale_clin)))
 
-    return float(p_clinical * 100.0)
+    risk_pct = float(p_clinical * 100.0)
+    risk_label = "low risk" if risk_pct < 5.0 else "elevated risk"
+
+    return risk_pct, risk_label
