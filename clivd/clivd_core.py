@@ -104,18 +104,27 @@ def clivd_modellab_score(
     # Hazard ratio (relative risk)
     hr = math.exp(lp)
 
-    # Risk-group classification from supplement cut points
+    # Risk band from supplement LP cut points (exact; authors' published boundaries)
     if lp < -0.258:
         group = "minimal"
-    elif lp <= 2.066:
+    elif lp < 2.066:
         group = "low"
-    elif lp <= 2.784:
+    elif lp < 2.784:
         group = "intermediate"
     else:
         group = "high"
 
+    # collapse of the band (intermediate/high = elevated).
+    risk_cat = "elevated" if group in ("intermediate", "high") else "low"
+
+    # Approximate 15-yr absolute risk (%). DERIVED, not directly published:
+    # baseline cumulative hazard back-solved from the three published LP/risk
+    # anchors (0.5/5/10%); competing risk of death not explicitly modeled.
+    LOG_BASELINE_CUMHAZ_15Y = -5.036
+    risk_15y_pct_approx = 100.0 * (1.0 - math.exp(-math.exp(lp + LOG_BASELINE_CUMHAZ_15Y)))
+
     return {
         "linear_predictor": lp,
-        "hazard_ratio": hr,
-        "risk_group_15y": group
+        "risk_cat": risk_cat,
+        "risk_15y_pct_approx": risk_15y_pct_approx,
     }
