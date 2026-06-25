@@ -40,7 +40,7 @@ def run_demo():
     gdrs_bundle = load_gdrs_bundle()
     r_gdrs = gdrs(
         age=52,
-        height=172,
+        height=1.72,
         waist=98,
         hypertension=True,
         exercise=1.5,               # h/week
@@ -59,13 +59,12 @@ def run_demo():
     print("=== Demo: SCORE2 ===")
     score2_bundle = load_score2_bundle()
     r_score2 = score2_risk(
-        age=60,
+        age=50,
         sex="male",
         smoker=True,
         sbp=140,
-        tchol=5.2,
-        hdl=1.2,
-        region="moderate",
+        tchol=5.5,
+        hdl=1.3,
         bundle=score2_bundle,
     )
     print(f"SCORE2 10y CVD risk: {r_score2:.2f}%\n")

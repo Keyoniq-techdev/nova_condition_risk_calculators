@@ -1,6 +1,7 @@
 import json, math
 from typing import Dict, Literal, Optional
 from ..common.io import load_bundle as _load_pkg_bundle
+from ..common.io import returns_nan_on_missing
 
 def load_caide_bundle(filename: str = "caide_coeff_bundle_v1.json"):
     return _load_pkg_bundle("risk_calculators.caide.bundles", filename)
@@ -8,6 +9,7 @@ def load_caide_bundle(filename: str = "caide_coeff_bundle_v1.json"):
 Sex = Literal["female", "male"]
 APOE = Literal["non_e4", "e4"]
 
+@returns_nan_on_missing
 def caide(
     age: int,
     sex: Sex,                        # "female" | "male"
@@ -19,10 +21,16 @@ def caide(
     apoe_status: Optional[APOE] = None,            # "non_e4" | "e4" (required if model="apoe")
     model: Literal["basic", "apoe"] = "basic",
     bundle: Dict = None
-) -> float:
+) -> Dict[str, object]:
     """
-    Returns 20-year CAIDE dementia risk (%) using the points + logistic-on-points model
-    
+    Returns 20-year CAIDE dementia risk as:
+      {
+        'risk_20y_pct': float,   # continuous 20-yr risk (%)
+        'risk_cat': str,         # 'low' | 'elevated', binned on the integer points score
+        'points': float          # summed points (0–15 basic / 0–18 apoe)
+      }
+    Category is thresholded on the points score (the cut the paper defines),
+    not on the percent. Basic/Model 1 cut = ≥9; APOE/Model 2 cut = ≥10.
     """
 
     model_key = "model_1_basic" if model == "basic" else "model_2_apoe"
@@ -120,4 +128,15 @@ def caide(
 
     logit = beta0 + beta1 + beta2 * points
     p = 1.0 / (1.0 + math.exp(-logit))
-    return float(p * 100.0)
+
+    # category: bin on the integer points score, using the model's defined cut.
+    # Model 1 (basic) → ≥9 elevated; Model 2 (apoe) → ≥10 elevated.
+    default_cut = 9 if model == "basic" else 10
+    cut = float(m.get("elevated_cut_points", default_cut))
+    risk_cat = "elevated" if points >= cut else "low"
+
+    return {
+        "risk_20y_pct": float(p * 100.0),
+        "risk_cat": risk_cat,
+        "points": float(points),
+    }

@@ -22,7 +22,7 @@ bundle = load_gdrs_bundle("gdrs_coeff_bundle_v1.json")
 # Example: 52-year-old man, former smoker (<20/day), hypertensive, HbA1c 5.7%
 risk = gdrs(
     age=52,
-    height=172,
+    height=1.72,
     waist=98,
     hypertension=True,
     exercise=1.5,               # hours/week
@@ -51,7 +51,7 @@ print(f"5-year diabetes risk: {risk:.2f}%")
 ## Inputs
 
 - **age**: integer, years  
-- **height**: cm   
+- **height**: m   
 - **waist**: cm  
 - **hypertension**: boolean (True/False)  
 - **exercise**: physical activity, hours/week  

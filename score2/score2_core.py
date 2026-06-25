@@ -1,10 +1,12 @@
 import json, math
-from typing import Dict
+from typing import Dict, Tuple
 from ..common.io import load_bundle as _load_pkg_bundle
+from ..common.io import returns_nan_on_missing
 
 def load_score2_bundle(filename: str = "score2_coeff_bundle_v1.json"):
     return _load_pkg_bundle("risk_calculators.score2.bundles", filename)
 
+@returns_nan_on_missing
 def score2_risk(
     age: int,
     sex: str,              # "male" | "female"
@@ -12,9 +14,9 @@ def score2_risk(
     sbp: float,            # mmHg
     tchol: float,          # mmol/L
     hdl: float,            # mmol/L
-    region: str,           # "low" | "moderate" | "high" | "very_high"
-    bundle: Dict
-) -> float:
+    bundle: Dict,
+    region="low"           # based on country of residence
+) -> Tuple[float, str]:
     """
     Returns 10-year CVD risk in percent, using the merged SCORE2 coeff bundle.
     - Pulls betas + region_params from bundle["by_region"][region][sex].
@@ -71,4 +73,10 @@ def score2_risk(
     x_adj = a + b * x
     p_reg = 1.0 - math.exp(-math.exp(x_adj))
 
-    return float(p_reg * 100.0)
+    risk_pct = float(p_reg * 100.0)
+
+    # age-stratified low/elevated cut (ESC SCORE2 categories)
+    threshold = 2.5 if age < 50 else 5.0
+    risk_label = "low risk" if risk_pct < threshold else "elevated risk"
+
+    return risk_pct, risk_label
